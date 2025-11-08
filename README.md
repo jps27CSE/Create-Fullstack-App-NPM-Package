@@ -1,8 +1,6 @@
----
-
 # **Create Fullstack App CLI**
 
-CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular** on the frontend and **Express** on the backend, with support for **JavaScript** and **TypeScript**.
+CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular** on the frontend and **Express** on the backend, with support for **JavaScript** and **TypeScript**. It also supports **MongoDB integration** using environment variables.
 
 ---
 
@@ -13,9 +11,11 @@ CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular**
 3. [Features](#features)
 4. [Frontend Options](#frontend-options)
 5. [Backend Options](#backend-options)
-6. [Project Structure](#project-structure)
-7. [Contributing](#contributing)
-8. [License](#license)
+6. [MongoDB Setup](#mongodb-setup)
+7. [Project Structure](#project-structure)
+8. [Running the Project](#running-the-project)
+9. [Contributing](#contributing)
+10. [License](#license)
 
 ---
 
@@ -27,7 +27,7 @@ You can run the CLI directly using `npx`:
 npx create-fullstack-app
 ```
 
-> If you have installed globally (optional):
+> Or install globally (optional):
 
 ```bash
 npm install -g create-fullstack-app
@@ -44,22 +44,24 @@ After running the CLI:
 2. Choose a **frontend framework**: React, Next.js, Vue, Angular.
 3. Choose **backend language**: JavaScript or TypeScript.
 4. If React is selected, choose **setup tool**: Create React App or Vite.
+5. Optionally, choose **MongoDB** as your database.
 
 The CLI will automatically:
 
-* Create a **server** folder with Express setup.
-* Create a **client** folder with the chosen frontend framework.
-* Create a **root package.json** with `npm run dev` for running **frontend + backend concurrently**.
+- Create a **server** folder with Express setup.
+- Create a **client** folder with the chosen frontend framework.
+- Create a **root `package.json`** with `npm run dev` to run **frontend + backend concurrently**.
+- Install all required dependencies automatically.
 
 ---
 
 ## **Features**
 
-* Supports **React, Next.js, Vue, Angular** frontend.
-* Supports **JavaScript & TypeScript** backend.
-* Automatically sets up **concurrently** to run backend and frontend together.
-* Automatically installs all **required dependencies**.
-* Default project name, author info, and GitHub link included.
+- Supports **React, Next.js, Vue, Angular** frontend.
+- Supports **JavaScript & TypeScript** backend.
+- Optional **MongoDB** setup.
+- Automatically installs **concurrently** to run frontend and backend together.
+- Default project name, author info, and GitHub link included.
 
 ---
 
@@ -76,8 +78,45 @@ The CLI will automatically:
 
 ## **Backend Options**
 
-* **JavaScript**: Express + CORS
-* **TypeScript**: Express + CORS + ts-node-dev + types packages
+- **JavaScript**: Express + CORS
+- **TypeScript**: Express + CORS + ts-node-dev + types packages
+- Optional **MongoDB**: Mongoose + dotenv
+
+---
+
+## **MongoDB Setup**
+
+If you chose **MongoDB** during project setup:
+
+1. Create a `.env` file in the `server` folder:
+
+```
+server/.env
+```
+
+2. Example `.env` content:
+
+```env
+# MongoDB connection URL (local)
+MONGODB_URL=mongodb://127.0.0.1:27017/myappDB
+
+# Optional: Backend port
+PORT=5000
+```
+
+> For MongoDB Atlas, use:
+
+```env
+MONGODB_URL=mongodb+srv://username:password@cluster0.mongodb.net/myappDB?retryWrites=true&w=majority
+```
+
+3. Make sure to **add `.env` to `.gitignore`**:
+
+```
+server/.env
+```
+
+4. Your backend will automatically connect using this environment variable.
 
 ---
 
@@ -90,6 +129,7 @@ my-fullstack-app/
 ├─ client/          # Frontend
 ├─ server/          # Backend
 │  ├─ index.js or index.ts
+│  └─ .env          # MongoDB config (if selected)
 ├─ package.json     # Root scripts (dev using concurrently)
 └─ README.md
 ```
@@ -103,8 +143,8 @@ cd my-fullstack-app
 npm run dev
 ```
 
-* Runs backend server on **[http://localhost:5000](http://localhost:5000)**
-* Runs frontend on **[http://localhost:3000](http://localhost:3000)** (depending on framework)
+- Backend server: **[http://localhost:5000](http://localhost:5000)**
+- Frontend: **[http://localhost:3000](http://localhost:3000)** (depends on framework)
 
 ---
 

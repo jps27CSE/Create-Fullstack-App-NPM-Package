@@ -4,38 +4,47 @@ import { execa } from "execa";
 import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
+import ora from "ora"; // ✅ Added spinner
 
 async function main() {
-console.log(chalk.cyan(`
+  console.log(
+    chalk.cyan(`
 🚀 Welcome to Create Fullstack App!
 👤 Created by Jack Pritom Soren
 🔗 GitHub: https://github.com/jps27CSE
-`));
-
+`),
+  );
 
   // 1️⃣ Prompt user choices
-  const { projectName, frontend, backendLang } = await inquirer.prompt([
-    {
-      type: "input",
-      name: "projectName",
-      message: "Enter your project name:",
-       default: "my-fullstack-app", 
-      validate: (input) =>
-        input.trim() !== "" || "Project name cannot be empty",
-    },
-    {
-      type: "list",
-      name: "frontend",
-      message: "Choose a frontend framework:",
-      choices: ["React", "Next.js", "Vue", "Angular"],
-    },
-    {
-      type: "list",
-      name: "backendLang",
-      message: "Backend language:",
-      choices: ["JavaScript", "TypeScript"],
-    },
-  ]);
+  const { projectName, frontend, backendLang, database } =
+    await inquirer.prompt([
+      {
+        type: "input",
+        name: "projectName",
+        message: "Enter your project name:",
+        default: "my-fullstack-app",
+        validate: (input) =>
+          input.trim() !== "" || "Project name cannot be empty",
+      },
+      {
+        type: "list",
+        name: "frontend",
+        message: "Choose a frontend framework:",
+        choices: ["React", "Next.js", "Vue", "Angular"],
+      },
+      {
+        type: "list",
+        name: "backendLang",
+        message: "Backend language:",
+        choices: ["JavaScript", "TypeScript"],
+      },
+      {
+        type: "list",
+        name: "database",
+        message: "Do you want to add a database?",
+        choices: ["None", "MongoDB"],
+      },
+    ]);
 
   const rootDir = path.resolve(projectName);
   const serverDir = path.join(rootDir, "server");
@@ -43,132 +52,215 @@ console.log(chalk.cyan(`
 
   fs.ensureDirSync(rootDir);
 
-  // 2️⃣ Setup backend
-  console.log(chalk.yellow("📦 Setting up Express backend..."));
-  fs.ensureDirSync(serverDir);
-  await execa("npm", ["init", "-y"], { cwd: serverDir });
+  // 2️⃣ Setup backend with spinner
+  const backendSpinner = ora("📦 Setting up Express backend...").start();
+  try {
+    fs.ensureDirSync(serverDir);
+    await execa("npm", ["init", "-y"], { cwd: serverDir });
 
-  const backendDeps = ["express", "cors"];
-  const backendDevDeps =
-    backendLang === "TypeScript"
-      ? ["typescript", "ts-node-dev", "@types/node", "@types/express", "@types/cors"]
-      : [];
+    const backendDeps = ["express", "cors"];
+    if (database === "MongoDB") backendDeps.push("mongoose", "dotenv");
 
-  await execa("npm", ["install", ...backendDeps], { cwd: serverDir });
-  if (backendDevDeps.length)
-    await execa("npm", ["install", "-D", ...backendDevDeps], { cwd: serverDir });
+    const backendDevDeps =
+      backendLang === "TypeScript"
+        ? [
+            "typescript",
+            "ts-node-dev",
+            "@types/node",
+            "@types/express",
+            "@types/cors",
+            ...(database === "MongoDB" ? ["@types/dotenv"] : []),
+          ]
+        : [];
 
-  const serverFile = backendLang === "TypeScript" ? "index.ts" : "index.js";
-  const serverCode =
-    backendLang === "TypeScript"
-      ? `import express from 'express';
+    await execa("npm", ["install", ...backendDeps], { cwd: serverDir });
+    if (backendDevDeps.length)
+      await execa("npm", ["install", "-D", ...backendDevDeps], {
+        cwd: serverDir,
+      });
+
+    const serverFile = backendLang === "TypeScript" ? "index.ts" : "index.js";
+
+    let serverCode;
+    if (backendLang === "TypeScript") {
+      serverCode = `import express from 'express';
 import cors from 'cors';
+${database === "MongoDB" ? "import mongoose from 'mongoose';\nimport dotenv from 'dotenv';\ndotenv.config();" : ""}
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+${
+  database === "MongoDB"
+    ? `// MongoDB connection
+const mongoURL = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/myappDB';
+mongoose.connect(mongoURL)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));`
+    : ""
+}
+
 app.get('/', (req, res) => res.send('Hello from TypeScript Express!'));
-app.listen(5000, () => console.log('Server running on http://localhost:5000'));`
-      : `const express = require('express');
+app.listen(5000, () => console.log('Server running on http://localhost:5000'));`;
+    } else {
+      serverCode = `const express = require('express');
 const cors = require('cors');
+${database === "MongoDB" ? "const mongoose = require('mongoose');\nrequire('dotenv').config();" : ""}
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+${
+  database === "MongoDB"
+    ? `// MongoDB connection
+const mongoURL = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/myappDB';
+mongoose.connect(mongoURL)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));`
+    : ""
+}
+
 app.get('/', (req, res) => res.send('Hello from Express!'));
 app.listen(5000, () => console.log('Server running on http://localhost:5000'));`;
+    }
 
-  fs.writeFileSync(path.join(serverDir, serverFile), serverCode);
+    fs.writeFileSync(path.join(serverDir, serverFile), serverCode);
 
-  const serverPackage = JSON.parse(
-    fs.readFileSync(path.join(serverDir, "package.json"))
-  );
-  serverPackage.scripts = backendLang === "TypeScript"
-    ? { dev: "ts-node-dev index.ts" }
-    : { dev: "node index.js" };
-  fs.writeFileSync(
-    path.join(serverDir, "package.json"),
-    JSON.stringify(serverPackage, null, 2)
-  );
+    const serverPackage = JSON.parse(
+      fs.readFileSync(path.join(serverDir, "package.json")),
+    );
+    serverPackage.scripts =
+      backendLang === "TypeScript"
+        ? { dev: "ts-node-dev index.ts" }
+        : { dev: "node index.js" };
+    fs.writeFileSync(
+      path.join(serverDir, "package.json"),
+      JSON.stringify(serverPackage, null, 2),
+    );
 
-  // 3️⃣ Setup frontend
-console.log(chalk.yellow("🎨 Creating frontend..."));
+    backendSpinner.succeed("✅ Express backend setup complete!");
+  } catch (err) {
+    backendSpinner.fail("❌ Failed to setup backend");
+    console.error(err);
+    process.exit(1);
+  }
 
-let clientCmd = "start"; // default frontend command
-let reactType = null;
+  // 3️⃣ Setup frontend with spinner
+  console.log(chalk.yellow("🎨 Creating frontend..."));
+  let clientCmd = "start"; // default frontend command
+  let reactType = null;
 
-try {
-  if (frontend === "React") {
-    const { setupType } = await inquirer.prompt([
-      {
-        type: "list",
-        name: "setupType",
-        message: "Choose React setup:",
-        choices: ["Create React App", "Vite"],
-      },
-    ]);
-    reactType = setupType;
+  try {
+    if (frontend === "React") {
+      const { setupType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "setupType",
+          message: "Choose React setup:",
+          choices: ["Create React App", "Vite"],
+        },
+      ]);
+      reactType = setupType;
 
-    if (reactType === "Create React App") {
-      await execa("npx", ["create-react-app", "client"], { cwd: rootDir, stdio: "inherit" });
-      clientCmd = "start";
-    } else {
-      await execa("npm", ["create", "vite@latest", "client", "--", "--template", "react"], {
+      if (reactType === "Create React App") {
+        await execa("npx", ["create-react-app", "client"], {
+          cwd: rootDir,
+          stdio: "inherit",
+        });
+        clientCmd = "start";
+      } else {
+        await execa(
+          "npm",
+          ["create", "vite@latest", "client", "--", "--template", "react"],
+          {
+            cwd: rootDir,
+            stdio: "inherit",
+          },
+        );
+
+        // ✅ Install dependencies inside client folder
+        console.log("📦 Installing React Vite frontend dependencies...");
+        await execa("npm", ["install"], {
+          cwd: path.join(rootDir, "client"),
+          stdio: "inherit",
+        });
+
+        clientCmd = "dev"; // Vite uses dev
+      }
+    } else if (frontend === "Next.js") {
+      await execa(
+        "npx",
+        ["create-next-app@latest", "client", "--typescript", "--eslint"],
+        { cwd: rootDir, stdio: "inherit" },
+      );
+      clientCmd = "dev"; // Next.js uses dev
+    } else if (frontend === "Vue") {
+      await execa(
+        "npm",
+        ["create", "vite@latest", "client", "--", "--template", "vue"],
+        {
+          cwd: rootDir,
+          stdio: "inherit",
+        },
+      );
+
+      // ✅ Install dependencies inside client folder
+      console.log("📦 Installing Vue Vite frontend dependencies...");
+      await execa("npm", ["install"], {
+        cwd: path.join(rootDir, "client"),
+        stdio: "inherit",
+      });
+
+      clientCmd = "dev"; // Vite uses dev
+    } else if (frontend === "Angular") {
+      await execa("npx", ["@angular/cli", "new", "client", "--skip-git"], {
         cwd: rootDir,
         stdio: "inherit",
       });
-      clientCmd = "dev"; // Vite uses dev
+      clientCmd = "start"; // Angular uses start
     }
-  } else if (frontend === "Next.js") {
-    await execa(
-      "npx",
-      ["create-next-app@latest", "client", "--typescript", "--eslint"],
-      { cwd: rootDir, stdio: "inherit" }
-    );
-    clientCmd = "dev"; // Next.js uses dev
-  } else if (frontend === "Vue") {
-    await execa("npm", ["create", "vite@latest", "client", "--", "--template", "vue"], {
-      cwd: rootDir,
-      stdio: "inherit",
-    });
-    clientCmd = "dev"; // Vue Vite uses dev
-  } else if (frontend === "Angular") {
-    await execa("npx", ["@angular/cli", "new", "client", "--skip-git"], {
-      cwd: rootDir,
-      stdio: "inherit",
-    });
-    clientCmd = "start"; // Angular uses start
+  } catch (err) {
+    console.error(`❌ Failed to create ${frontend} frontend`);
+    console.error(err);
+    process.exit(1);
   }
-} catch (err) {
-  console.error(chalk.red("❌ Frontend setup failed:"), err);
-  process.exit(1);
-}
 
-// 4️⃣ Root package.json for dev (after frontend is done)
-console.log(chalk.yellow("🧩 Creating root package.json..."));
+  // 4️⃣ Root package.json for dev (after frontend is done)
+  console.log(chalk.yellow("🧩 Creating root package.json..."));
+  const rootPackage = {
+    name: projectName,
+    version: "1.0.0",
+    scripts: {
+      dev: `npx concurrently "npm --prefix server run dev" "npm --prefix client run ${clientCmd}"`,
+    },
+    devDependencies: {
+      concurrently: "^8.2.0",
+    },
+  };
+  fs.writeFileSync(
+    path.join(rootDir, "package.json"),
+    JSON.stringify(rootPackage, null, 2),
+  );
 
-const rootPackage = {
-  name: projectName,
-  version: "1.0.0",
-  scripts: {
-    dev: `npx concurrently "npm --prefix server run dev" "npm --prefix client run ${clientCmd}"`,
-  },
-  devDependencies: {
-    concurrently: "^8.2.0",
-  },
-};
+  // Install concurrently with spinner
+  const installSpinner = ora("📦 Installing root dependencies...").start();
+  try {
+    await execa("npm", ["install"], { cwd: rootDir });
+    installSpinner.succeed("✅ Root dependencies installed successfully!");
+  } catch (err) {
+    installSpinner.fail("❌ Failed to install root dependencies");
+    console.error(err);
+    process.exit(1);
+  }
 
-fs.writeFileSync(path.join(rootDir, "package.json"), JSON.stringify(rootPackage, null, 2));
-
-// Install concurrently
-console.log(chalk.yellow("📦 Installing root dependencies..."));
-await execa("npm", ["install"], { cwd: rootDir });
-
-console.log(chalk.green("✅ Fullstack App created successfully!"));
-console.log(chalk.blue(`
+  console.log(chalk.green("✅ Fullstack App created successfully!"));
+  console.log(
+    chalk.blue(`
 Next steps:
   cd ${projectName}
   npm run dev
-`));
-
+`),
+  );
 }
 
 main().catch((err) => {
