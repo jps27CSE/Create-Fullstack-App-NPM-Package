@@ -1,6 +1,6 @@
 {
   "name": "devstacker",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "main": "index.js",
   "type": "module",
   "bin": {
@@ -25,7 +25,10 @@
     "boilerplate",
     "fullstack-buildr"
   ],
-  "author": "Jack Pritom Soren",
+  "author": {
+    "name": "Jack Pritom Soren",
+    "url": "https://github.com/jps27CSE"
+  },
   "license": "ISC",
   "description": "",
   "dependencies": {
