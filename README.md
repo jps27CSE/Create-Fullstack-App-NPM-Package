@@ -21,17 +21,29 @@ CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular**
 
 ## **Installation**
 
-You can run the CLI directly using `npx`:
+> ⚠️ Because the name `create-fullstack-app` is already used on npm,  
+> you’ll need to **install `devstacker`** before using the command.
+
+### Step 1 — Install the package
+
+You can install it globally (recommended):
+
+```bash
+npm install -g devstacker
+```
+
+Or install locally in your project folder:
+
+```bash
+npm install devstacker
+```
+
+### Step 2 — Run the CLI
+
+Once installed, you can run:
 
 ```bash
 npx create-fullstack-app
-```
-
-> Or install globally (optional):
-
-```bash
-npm install -g create-fullstack-app
-create-fullstack-app
 ```
 
 ---
