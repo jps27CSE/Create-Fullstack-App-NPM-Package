@@ -4,12 +4,28 @@ import { execa } from "execa";
 import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
-import ora from "ora"; // ✅ Added spinner
+import ora from "ora";
+import { fileURLToPath } from "url";
+
+// ✅ Cross-platform package.json path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let version = "unknown";
+
+try {
+  const pkg = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "../package.json"), "utf-8"),
+  );
+  version = pkg.version;
+} catch (err) {
+  console.warn("⚠️ Could not read package.json version:", err.message);
+}
 
 async function main() {
   console.log(
     chalk.cyan(`
-🚀 Welcome to Create Fullstack App!
+🚀 Welcome to Create Fullstack App v${version}
 👤 Created by Jack Pritom Soren
 🔗 GitHub: https://github.com/jps27CSE
 `),
