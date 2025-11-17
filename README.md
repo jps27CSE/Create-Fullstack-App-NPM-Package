@@ -1,6 +1,6 @@
 # **Create Fullstack App CLI**
 
-CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular** on the frontend and **Express** on the backend, with support for **JavaScript** and **TypeScript**. It also supports **MongoDB integration** using environment variables.
+CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular** on the frontend and **Express** on the backend, with support for **JavaScript** and **TypeScript**. It also supports **MongoDB integration** using environment variables, including **automatic `.env` creation** with default configurations.
 
 ---
 
@@ -21,7 +21,7 @@ CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular**
 
 ## **Installation**
 
-> ⚠️ Because the name `create-fullstack-app` is already used on npm,  
+> ⚠️ Because the name `create-fullstack-app` is already used on npm,
 > you’ll need to **install `devstacker`** before using the command.
 
 ### Step 1 — Install the package
@@ -63,6 +63,7 @@ The CLI will automatically:
 - Create a **server** folder with Express setup.
 - Create a **client** folder with the chosen frontend framework.
 - Create a **root `package.json`** with `npm run dev` to run **frontend + backend concurrently**.
+- Automatically **generate a `.env` file** in the `server` folder with default MongoDB and PORT configuration if MongoDB is selected.
 - Install all required dependencies automatically.
 
 ---
@@ -71,7 +72,7 @@ The CLI will automatically:
 
 - Supports **React, Next.js, Vue, Angular** frontend.
 - Supports **JavaScript & TypeScript** backend.
-- Optional **MongoDB** setup.
+- Optional **MongoDB** setup with **automatic `.env` creation**.
 - Automatically installs **concurrently** to run frontend and backend together.
 - Default project name, author info, and GitHub link included.
 
@@ -93,6 +94,15 @@ The CLI will automatically:
 - **JavaScript**: Express + CORS
 - **TypeScript**: Express + CORS + ts-node-dev + types packages
 - Optional **MongoDB**: Mongoose + dotenv
+- `.env` file automatically created in `server` folder with default:
+
+```env
+# MongoDB Configuration
+MONGODB_URL=mongodb://127.0.0.1:27017/myappDB
+
+# Server Port
+PORT=5000
+```
 
 ---
 
@@ -100,7 +110,7 @@ The CLI will automatically:
 
 If you chose **MongoDB** during project setup:
 
-1. Create a `.env` file in the `server` folder:
+1. A `.env` file is **automatically created** in the `server` folder:
 
 ```
 server/.env
@@ -112,11 +122,11 @@ server/.env
 # MongoDB connection URL (local)
 MONGODB_URL=mongodb://127.0.0.1:27017/myappDB
 
-# Optional: Backend port
+# Backend port
 PORT=5000
 ```
 
-> For MongoDB Atlas, use:
+> For MongoDB Atlas, replace with:
 
 ```env
 MONGODB_URL=mongodb+srv://username:password@cluster0.mongodb.net/myappDB?retryWrites=true&w=majority
@@ -128,7 +138,7 @@ MONGODB_URL=mongodb+srv://username:password@cluster0.mongodb.net/myappDB?retryWr
 server/.env
 ```
 
-4. Your backend will automatically connect using this environment variable.
+4. The backend automatically reads this `.env` file on startup.
 
 ---
 
@@ -141,7 +151,7 @@ my-fullstack-app/
 ├─ client/          # Frontend
 ├─ server/          # Backend
 │  ├─ index.js or index.ts
-│  └─ .env          # MongoDB config (if selected)
+│  └─ .env          # MongoDB config (auto-generated if selected)
 ├─ package.json     # Root scripts (dev using concurrently)
 └─ README.md
 ```

@@ -76,6 +76,7 @@ async function main() {
 
     const backendDeps = ["express", "cors"];
     if (database === "MongoDB") backendDeps.push("mongoose", "dotenv");
+    else backendDeps.push("dotenv"); // always add dotenv to read PORT
 
     const backendDevDeps =
       backendLang === "TypeScript"
@@ -97,11 +98,15 @@ async function main() {
 
     const serverFile = backendLang === "TypeScript" ? "index.ts" : "index.js";
 
+    // >>> Server code updated to read PORT from .env
     let serverCode;
     if (backendLang === "TypeScript") {
       serverCode = `import express from 'express';
 import cors from 'cors';
-${database === "MongoDB" ? "import mongoose from 'mongoose';\nimport dotenv from 'dotenv';\ndotenv.config();" : ""}
+import dotenv from 'dotenv';
+${database === "MongoDB" ? "import mongoose from 'mongoose';" : ""}
+
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -116,12 +121,15 @@ mongoose.connect(mongoURL)
     : ""
 }
 
+const PORT = process.env.PORT || 5000;
 app.get('/', (req, res) => res.send('Hello from TypeScript Express!'));
-app.listen(5000, () => console.log('Server running on http://localhost:5000'));`;
+app.listen(PORT, () => console.log('Server running on http://localhost:' + PORT));`;
     } else {
       serverCode = `const express = require('express');
 const cors = require('cors');
-${database === "MongoDB" ? "const mongoose = require('mongoose');\nrequire('dotenv').config();" : ""}
+require('dotenv').config();
+${database === "MongoDB" ? "const mongoose = require('mongoose');" : ""}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -136,8 +144,9 @@ mongoose.connect(mongoURL)
     : ""
 }
 
+const PORT = process.env.PORT || 5000;
 app.get('/', (req, res) => res.send('Hello from Express!'));
-app.listen(5000, () => console.log('Server running on http://localhost:5000'));`;
+app.listen(PORT, () => console.log('Server running on http://localhost:' + PORT));`;
     }
 
     fs.writeFileSync(path.join(serverDir, serverFile), serverCode);
@@ -153,6 +162,24 @@ app.listen(5000, () => console.log('Server running on http://localhost:5000'));`
       path.join(serverDir, "package.json"),
       JSON.stringify(serverPackage, null, 2),
     );
+
+    // >>> .env FILE CREATION
+    let envContent = `# Server Port
+PORT=5000
+`;
+
+    if (database === "MongoDB") {
+      envContent = `# MongoDB Configuration
+MONGODB_URL=mongodb://127.0.0.1:27017/myappDB
+
+# Server Port
+PORT=5000
+`;
+    }
+
+    fs.writeFileSync(path.join(serverDir, ".env"), envContent);
+    console.log(chalk.green("📄 .env file created in server folder"));
+    // <<< END .env CREATION
 
     backendSpinner.succeed("✅ Express backend setup complete!");
   } catch (err) {
