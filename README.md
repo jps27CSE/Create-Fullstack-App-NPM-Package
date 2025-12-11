@@ -12,10 +12,11 @@ CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular**
 4. [Frontend Options](#frontend-options)
 5. [Backend Options](#backend-options)
 6. [MongoDB Setup](#mongodb-setup)
-7. [Project Structure](#project-structure)
-8. [Running the Project](#running-the-project)
-9. [Contributing](#contributing)
-10. [License](#license)
+7. [Linting and Formatting](#linting-and-formatting)
+8. [Project Structure](#project-structure)
+9. [Running the Project](#running-the-project)
+10. [Contributing](#contributing)
+11. [License](#license)
 
 ---
 
@@ -57,6 +58,7 @@ After running the CLI:
 3. Choose **backend language**: JavaScript or TypeScript.
 4. If React is selected, choose **setup tool**: Create React App or Vite.
 5. Optionally, choose **MongoDB** as your database.
+6. Optionally, choose to install **ESLint and Prettier** for code linting and formatting.
 
 The CLI will automatically:
 
@@ -73,6 +75,7 @@ The CLI will automatically:
 - Supports **React, Next.js, Vue, Angular** frontend.
 - Supports **JavaScript & TypeScript** backend.
 - Optional **MongoDB** setup with **automatic `.env` creation**.
+- Optional **ESLint and Prettier** setup with automatic configuration files in root, client, and server folders.
 - Automatically installs **concurrently** to run frontend and backend together.
 - Default project name, author info, and GitHub link included.
 
@@ -142,17 +145,43 @@ server/.env
 
 ---
 
+## **Linting and Formatting**
+
+If you chose to install **ESLint and Prettier** during setup:
+
+- **ESLint** configurations are created in `root`, `client`, and `server` folders for isolated linting rules.
+- **Prettier** configurations ensure consistent code formatting across the project.
+- You can run linting and formatting commands in each folder:
+
+```bash
+# In root, client, or server folder
+npm run lint  # If defined in package.json
+npx eslint . --ext .js,.jsx,.ts,.tsx
+npx prettier --check .
+npx prettier --write .
+```
+
+This allows different ESLint rules for frontend (e.g., React-specific) and backend (e.g., Node.js-specific) code.
+
+---
+
 ## **Project Structure**
 
 After scaffolding, your project will look like:
 
 ```
 my-fullstack-app/
-├─ client/          # Frontend
-├─ server/          # Backend
+├─ client/              # Frontend
+│  ├─ .eslintrc.js      # ESLint config (if chosen)
+│  └─ .prettierrc       # Prettier config (if chosen)
+├─ server/              # Backend
 │  ├─ index.js or index.ts
-│  └─ .env          # MongoDB config (auto-generated if selected)
-├─ package.json     # Root scripts (dev using concurrently)
+│  ├─ .env              # MongoDB config (auto-generated if selected)
+│  ├─ .eslintrc.js      # ESLint config (if chosen)
+│  └─ .prettierrc       # Prettier config (if chosen)
+├─ .eslintrc.js         # Root ESLint config (if chosen)
+├─ .prettierrc          # Root Prettier config (if chosen)
+├─ package.json         # Root scripts (dev using concurrently)
 └─ README.md
 ```
 
