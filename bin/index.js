@@ -62,7 +62,21 @@ async function main() {
       },
     ]);
 
-  // 1.5️⃣ Prompt for linting tools
+  // 1.5️⃣ Prompt for Tailwind CSS (skip for Next.js as it already asks)
+  let installTailwind = false;
+  if (frontend !== "Next.js") {
+    const { tailwind } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "tailwind",
+        message: "Do you want to install Tailwind CSS for the frontend?",
+        default: false,
+      },
+    ]);
+    installTailwind = tailwind;
+  }
+
+  // 1.6️⃣ Prompt for linting tools
   const { installLinting } = await inquirer.prompt([
     {
       type: "confirm",
@@ -271,6 +285,35 @@ PORT=5000
           stdio: "inherit",
         });
         clientCmd = "start";
+
+        if (installTailwind) {
+          console.log("🎨 Installing Tailwind CSS for Create React App...");
+          await execa(
+            "npm",
+            ["install", "-D", "tailwindcss", "postcss", "autoprefixer"],
+            { cwd: clientDir },
+          );
+          await execa("npx", ["tailwindcss", "init", "-p"], { cwd: clientDir });
+
+          const tailwindConfigPath = path.join(clientDir, "tailwind.config.js");
+          if (fs.existsSync(tailwindConfigPath)) {
+            let config = fs.readFileSync(tailwindConfigPath, "utf-8");
+            config = config.replace(
+              "content: []",
+              'content: ["./src/**/*.{js,jsx,ts,tsx}"]',
+            );
+            fs.writeFileSync(tailwindConfigPath, config);
+          }
+
+          const indexCssPath = path.join(clientDir, "src", "index.css");
+          if (fs.existsSync(indexCssPath)) {
+            let css = fs.readFileSync(indexCssPath, "utf-8");
+            css =
+              "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n" +
+              css;
+            fs.writeFileSync(indexCssPath, css);
+          }
+        }
       } else {
         await execa(
           "npm",
@@ -287,6 +330,34 @@ PORT=5000
           cwd: path.join(rootDir, "client"),
           stdio: "inherit",
         });
+
+        if (installTailwind) {
+          console.log("🎨 Installing Tailwind CSS for React Vite...");
+          await execa("npm", ["install", "tailwindcss", "@tailwindcss/vite"], {
+            cwd: clientDir,
+          });
+
+          const viteConfigPath = path.join(clientDir, "vite.config.js");
+          if (fs.existsSync(viteConfigPath)) {
+            let config = fs.readFileSync(viteConfigPath, "utf-8");
+            config = config.replace(
+              "import { defineConfig } from 'vite'",
+              "import { defineConfig } from 'vite'\nimport tailwindcss from '@tailwindcss/vite'",
+            );
+            config = config.replace(
+              "plugins: [",
+              "plugins: [\n    tailwindcss(),",
+            );
+            fs.writeFileSync(viteConfigPath, config);
+          }
+
+          const indexCssPath = path.join(clientDir, "src", "index.css");
+          if (fs.existsSync(indexCssPath)) {
+            let css = fs.readFileSync(indexCssPath, "utf-8");
+            css = '@import "tailwindcss";\n' + css;
+            fs.writeFileSync(indexCssPath, css);
+          }
+        }
 
         clientCmd = "dev"; // Vite uses dev
       }
@@ -313,6 +384,34 @@ PORT=5000
         cwd: path.join(rootDir, "client"),
         stdio: "inherit",
       });
+
+      if (installTailwind) {
+        console.log("🎨 Installing Tailwind CSS for Vue...");
+        await execa("npm", ["install", "tailwindcss", "@tailwindcss/vite"], {
+          cwd: clientDir,
+        });
+
+        const viteConfigPath = path.join(clientDir, "vite.config.js");
+        if (fs.existsSync(viteConfigPath)) {
+          let config = fs.readFileSync(viteConfigPath, "utf-8");
+          config = config.replace(
+            "import { defineConfig } from 'vite'",
+            "import { defineConfig } from 'vite'\nimport tailwindcss from '@tailwindcss/vite'",
+          );
+          config = config.replace(
+            "plugins: [",
+            "plugins: [\n    tailwindcss(),",
+          );
+          fs.writeFileSync(viteConfigPath, config);
+        }
+
+        const styleCssPath = path.join(clientDir, "src", "style.css");
+        if (fs.existsSync(styleCssPath)) {
+          let css = fs.readFileSync(styleCssPath, "utf-8");
+          css = '@import "tailwindcss";\n' + css;
+          fs.writeFileSync(styleCssPath, css);
+        }
+      }
 
       clientCmd = "dev"; // Vite uses dev
     } else if (frontend === "Angular") {

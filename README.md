@@ -58,7 +58,8 @@ After running the CLI:
 3. Choose **backend language**: JavaScript or TypeScript.
 4. If React is selected, choose **setup tool**: Create React App or Vite.
 5. Optionally, choose **MongoDB** as your database.
-6. Optionally, choose to install **ESLint and Prettier** for code linting and formatting.
+6. Optionally, choose to install **Tailwind CSS** for the frontend (not available for Angular).
+7. Optionally, choose to install **ESLint and Prettier** for code linting and formatting.
 
 The CLI will automatically:
 
@@ -75,6 +76,7 @@ The CLI will automatically:
 - Supports **React, Next.js, Vue, Angular** frontend.
 - Supports **JavaScript & TypeScript** backend.
 - Optional **MongoDB** setup with **automatic `.env` creation**.
+- Optional **Tailwind CSS** setup for frontend frameworks (except Angular).
 - Optional **ESLint and Prettier** setup with automatic configuration files in root, client, and server folders.
 - Automatically installs **concurrently** to run frontend and backend together.
 - Default project name, author info, and GitHub link included.
@@ -201,7 +203,7 @@ npm run dev
 
 ## **License**
 
-MIT License
+ISC License
 Author: **Jack Pritom Soren**
 GitHub: [Jack Pritom Soren](https://github.com/jps27CSE)
 
