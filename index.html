@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DevStacker - Create Fullstack Apps Instantly</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body class="bg-gray-900 text-white">
+    <!-- Header -->
+    <header class="bg-gray-800 shadow-lg">
+      <div class="container mx-auto px-4 py-6">
+        <h1 class="text-3xl font-bold text-white">DevStacker</h1>
+        <p class="text-gray-300">Scaffold fullstack applications with ease</p>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section
+      class="bg-gradient-to-r from-blue-800 to-purple-800 text-white py-20"
+    >
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-5xl font-bold mb-4">
+          Create Fullstack Apps in Seconds
+        </h2>
+        <p class="text-xl mb-8">
+          Choose from React, Next.js, Vue, Angular, Express, TypeScript,
+          JavaScript, and more with Vite for blazing fast development.
+        </p>
+        <button
+          class="bg-white text-blue-800 px-8 py-3 rounded-lg font-semibold hover:bg-gray-200 transition duration-300"
+        >
+          <i class="fas fa-rocket mr-2"></i>Get Started
+        </button>
+        <div class="mt-8">
+          <p class="text-lg mb-4">
+            Install and run this command to get started:
+          </p>
+          <div class="bg-gray-900 p-4 rounded-lg inline-flex items-center">
+            <code class="text-green-400 mr-4"
+              >npm install -g devstacker && npx create-fullstack-app</code
+            >
+            <button
+              onclick="copyToClipboard('npm install -g devstacker && npx create-fullstack-app')"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+            >
+              <i class="fas fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+        <p class="mt-4">
+          <a
+            href="https://www.npmjs.com/package/devstacker"
+            class="text-blue-300 hover:text-blue-200 underline"
+          >
+            View on npm
+          </a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-4">
+        <h3 class="text-3xl font-bold text-center mb-12">Features</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div class="text-center bg-gray-700 p-6 rounded-lg shadow-lg">
+            <i class="fas fa-code text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">Multiple Frameworks</h4>
+            <p class="text-gray-300">
+              Support for React, Next.js, Vue, Angular on frontend and Express
+              on backend.
+            </p>
+          </div>
+          <div class="text-center bg-gray-700 p-6 rounded-lg shadow-lg">
+            <i class="fas fa-language text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">JavaScript & TypeScript</h4>
+            <p class="text-gray-300">
+              Choose between TypeScript for type safety or JavaScript for
+              flexibility.
+            </p>
+          </div>
+          <div class="text-center bg-gray-700 p-6 rounded-lg shadow-lg">
+            <i class="fas fa-database text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">MongoDB Integration</h4>
+            <p class="text-gray-300">
+              Optional MongoDB setup with automatic .env creation and Mongoose.
+            </p>
+          </div>
+          <div class="text-center bg-gray-700 p-6 rounded-lg shadow-lg">
+            <i class="fas fa-tools text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">Tailwind CSS</h4>
+            <p class="text-gray-300">
+              Optional Tailwind CSS setup for styling (not available for
+              Angular).
+            </p>
+          </div>
+          <div class="text-center bg-gray-700 p-6 rounded-lg shadow-lg">
+            <i class="fas fa-check-circle text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">ESLint & Prettier</h4>
+            <p class="text-gray-300">
+              Optional code linting and formatting with automatic
+              configurations.
+            </p>
+          </div>
+          <div class="text-center bg-gray-700 p-6 rounded-lg shadow-lg">
+            <i class="fas fa-terminal text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">CLI Based</h4>
+            <p class="text-gray-300">
+              Simple command-line interface to generate projects instantly.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Supported Frameworks Section -->
+    <section class="py-20 bg-gray-900">
+      <div class="container mx-auto px-4">
+        <h3 class="text-3xl font-bold text-center mb-12">
+          Supported Frameworks
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left bg-gray-800 rounded-lg shadow-lg">
+            <thead>
+              <tr class="bg-gray-700">
+                <th class="px-6 py-3 text-white">Framework</th>
+                <th class="px-6 py-3 text-white">Setup Tool</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-gray-600">
+                <td class="px-6 py-4 text-gray-300">React</td>
+                <td class="px-6 py-4 text-gray-300">CRA / Vite</td>
+              </tr>
+              <tr class="border-t border-gray-600">
+                <td class="px-6 py-4 text-gray-300">Next.js</td>
+                <td class="px-6 py-4 text-gray-300">TypeScript + ESLint</td>
+              </tr>
+              <tr class="border-t border-gray-600">
+                <td class="px-6 py-4 text-gray-300">Vue</td>
+                <td class="px-6 py-4 text-gray-300">Vite</td>
+              </tr>
+              <tr class="border-t border-gray-600">
+                <td class="px-6 py-4 text-gray-300">Angular</td>
+                <td class="px-6 py-4 text-gray-300">Angular CLI</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-4 text-center">
+        <h3 class="text-3xl font-bold mb-8">Installation</h3>
+        <p class="text-lg mb-6 text-gray-300">
+          Install the package globally or locally, then run the CLI.
+        </p>
+        <div class="bg-gray-900 p-6 rounded-lg inline-block mb-6">
+          <code class="text-green-400 text-lg">npm install -g devstacker</code>
+        </div>
+        <p class="text-gray-300 mb-4">Then run:</p>
+        <div class="bg-gray-900 p-6 rounded-lg inline-block">
+          <code class="text-green-400 text-lg">npx create-fullstack-app</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- How to Use Section -->
+    <section class="py-20 bg-gray-800">
+      <div class="container mx-auto px-4">
+        <h3 class="text-3xl font-bold text-center mb-12">How to Use</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div class="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-folder-plus text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">1. Enter Project Name</h4>
+            <p class="text-gray-300">
+              Provide a name for your project (default: my-fullstack-app).
+            </p>
+          </div>
+          <div class="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-code text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">2. Choose Frontend</h4>
+            <p class="text-gray-300">Select React, Next.js, Vue, or Angular.</p>
+          </div>
+          <div class="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-language text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">3. Choose Language</h4>
+            <p class="text-gray-300">
+              Pick JavaScript or TypeScript for backend.
+            </p>
+          </div>
+          <div class="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-cogs text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">4. Setup Tool (React)</h4>
+            <p class="text-gray-300">
+              Choose Create React App or Vite for React projects.
+            </p>
+          </div>
+          <div class="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-database text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">5. Optional: MongoDB</h4>
+            <p class="text-gray-300">
+              Add MongoDB integration with auto .env setup.
+            </p>
+          </div>
+          <div class="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-palette text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">6. Optional: Tailwind</h4>
+            <p class="text-gray-300">
+              Install Tailwind CSS for styling (not Angular).
+            </p>
+          </div>
+          <div class="bg-gray-700 p-6 rounded-lg shadow-lg text-center">
+            <i class="fas fa-check-circle text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">7. Optional: Linting</h4>
+            <p class="text-gray-300">
+              Add ESLint and Prettier for code quality.
+            </p>
+          </div>
+          <div
+            class="bg-gray-700 p-6 rounded-lg shadow-lg text-center col-span-1 md:col-span-2 lg:col-span-3"
+          >
+            <i class="fas fa-rocket text-4xl text-blue-400 mb-4"></i>
+            <h4 class="text-xl font-semibold mb-2">Ready to Go!</h4>
+            <p class="text-gray-300">
+              CLI creates folders, sets up package.json, and installs
+              dependencies automatically.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8 border-t border-gray-700">
+      <div class="container mx-auto px-4 text-center">
+        <p>
+          &copy; <span id="year"></span> DevStacker. Built by
+          <a
+            href="https://github.com/jps27CSE"
+            class="text-blue-400 hover:text-blue-300"
+            >Jack Pritom Soren</a
+          >.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(
+          function () {
+            alert("Command copied to clipboard!");
+          },
+          function (err) {
+            console.error("Could not copy text: ", err);
+          },
+        );
+      }
+    </script>
+  </body>
+</html>
