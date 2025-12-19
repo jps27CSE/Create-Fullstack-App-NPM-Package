@@ -1,6 +1,6 @@
 # **Create Fullstack App CLI**
 
-CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular** on the frontend and **Express** on the backend, with support for **JavaScript** and **TypeScript**. It also supports **MongoDB integration** using environment variables, including **automatic `.env` creation** with default configurations.
+CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular** on the frontend and **Express** on the backend, with support for **JavaScript** and **TypeScript**. It also supports **MongoDB** or **PostgreSQL integration** using environment variables, including **automatic `.env` creation** with default configurations.
 
 ---
 
@@ -11,7 +11,7 @@ CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular**
 3. [Features](#features)
 4. [Frontend Options](#frontend-options)
 5. [Backend Options](#backend-options)
-6. [MongoDB Setup](#mongodb-setup)
+6. [Database Setup](#database-setup)
 7. [Linting and Formatting](#linting-and-formatting)
 8. [Project Structure](#project-structure)
 9. [Running the Project](#running-the-project)
@@ -57,7 +57,7 @@ After running the CLI:
 2. Choose a **frontend framework**: React, Next.js, Vue, Angular.
 3. Choose **backend language**: JavaScript or TypeScript.
 4. If React is selected, choose **setup tool**: Create React App or Vite.
-5. Optionally, choose **MongoDB** as your database.
+5. Optionally, choose **MongoDB** or **PostgreSQL** as your database.
 6. Optionally, choose to install **Tailwind CSS** for the frontend (not available for Angular).
 7. Optionally, choose to install **ESLint and Prettier** for code linting and formatting.
 
@@ -66,7 +66,7 @@ The CLI will automatically:
 - Create a **server** folder with Express setup.
 - Create a **client** folder with the chosen frontend framework.
 - Create a **root `package.json`** with `npm run dev` to run **frontend + backend concurrently**.
-- Automatically **generate a `.env` file** in the `server` folder with default MongoDB and PORT configuration if MongoDB is selected.
+- Automatically **generate a `.env` file** in the `server` folder with default database and PORT configuration if a database is selected.
 - Install all required dependencies automatically.
 
 ---
@@ -75,7 +75,7 @@ The CLI will automatically:
 
 - Supports **React, Next.js, Vue, Angular** frontend.
 - Supports **JavaScript & TypeScript** backend.
-- Optional **MongoDB** setup with **automatic `.env` creation**.
+- Optional **MongoDB** or **PostgreSQL** setup with **automatic `.env` creation**.
 - Optional **Tailwind CSS** setup for frontend frameworks (except Angular).
 - Optional **ESLint and Prettier** setup with automatic configuration files in root, client, and server folders.
 - Automatically installs **concurrently** to run frontend and backend together.
@@ -99,7 +99,10 @@ The CLI will automatically:
 - **JavaScript**: Express + CORS
 - **TypeScript**: Express + CORS + ts-node-dev + types packages
 - Optional **MongoDB**: Mongoose + dotenv
+- Optional **PostgreSQL**: Prisma + dotenv
 - `.env` file automatically created in `server` folder with default:
+
+For MongoDB:
 
 ```env
 # MongoDB Configuration
@@ -109,9 +112,19 @@ MONGODB_URL=mongodb://127.0.0.1:27017/myappDB
 PORT=5000
 ```
 
+For PostgreSQL:
+
+```env
+# PostgreSQL Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/myappdb?schema=public"
+
+# Server Port
+PORT=5000
+```
+
 ---
 
-## **MongoDB Setup**
+## **Database Setup**
 
 If you chose **MongoDB** during project setup:
 
@@ -144,6 +157,49 @@ server/.env
 ```
 
 4. The backend automatically reads this `.env` file on startup.
+
+### PostgreSQL Setup
+
+If you chose **PostgreSQL** during project setup:
+
+1. A `.env` file is **automatically created** in the `server` folder:
+
+```
+server/.env
+```
+
+2. Example `.env` content:
+
+```env
+# PostgreSQL connection URL
+DATABASE_URL="postgresql://username:password@localhost:5432/myappdb?schema=public"
+
+# Backend port
+PORT=5000
+```
+
+> Update the DATABASE_URL with your actual PostgreSQL credentials.
+
+3. A `prisma/schema.prisma` file is created with a basic User model.
+
+4. Prisma scripts are added to `server/package.json`:
+   - `npm run prisma:generate` - Generate Prisma client
+   - `npm run prisma:db:push` - Push schema to database
+
+5. Make sure to **add `.env` to `.gitignore`**:
+
+```
+server/.env
+```
+
+6. After updating the DATABASE_URL, run:
+
+```bash
+cd server
+npm run prisma:db:push
+```
+
+This will create the database tables based on your schema.
 
 ---
 
@@ -178,7 +234,10 @@ my-fullstack-app/
 │  └─ .prettierrc       # Prettier config (if chosen)
 ├─ server/              # Backend
 │  ├─ index.js or index.ts
-│  ├─ .env              # MongoDB config (auto-generated if selected)
+│  ├─ .env              # Database config (auto-generated if selected)
+│  ├─ prisma/           # Prisma folder (if PostgreSQL selected)
+│  │  ├─ schema.prisma
+│  │  └─ prisma.config.ts
 │  ├─ .eslintrc.js      # ESLint config (if chosen)
 │  └─ .prettierrc       # Prettier config (if chosen)
 ├─ .eslintrc.js         # Root ESLint config (if chosen)

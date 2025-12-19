@@ -58,7 +58,7 @@ async function main() {
         type: "list",
         name: "database",
         message: "Do you want to add a database?",
-        choices: ["None", "MongoDB"],
+        choices: ["None", "MongoDB", "PostgreSQL"],
       },
     ]);
 
@@ -101,6 +101,8 @@ async function main() {
 
     const backendDeps = ["express", "cors"];
     if (database === "MongoDB") backendDeps.push("mongoose", "dotenv");
+    else if (database === "PostgreSQL")
+      backendDeps.push("@prisma/client", "@prisma/adapter-pg", "pg", "dotenv");
     else backendDeps.push("dotenv"); // always add dotenv to read PORT
 
     const backendDevDeps =
@@ -112,8 +114,11 @@ async function main() {
             "@types/express",
             "@types/cors",
             ...(database === "MongoDB" ? ["@types/dotenv"] : []),
+            ...(database === "PostgreSQL" ? ["prisma"] : []),
           ]
-        : [];
+        : database === "PostgreSQL"
+          ? ["prisma"]
+          : [];
 
     await execa("npm", ["install", ...backendDeps], { cwd: serverDir });
     if (backendDevDeps.length)
@@ -130,6 +135,7 @@ async function main() {
 import cors from 'cors';
 import dotenv from 'dotenv';
 ${database === "MongoDB" ? "import mongoose from 'mongoose';" : ""}
+${database === "PostgreSQL" ? "import { PrismaClient } from '@prisma/client';\nimport { PrismaPg } from '@prisma/adapter-pg';" : ""}
 
 dotenv.config();
 const app = express();
@@ -145,6 +151,14 @@ mongoose.connect(mongoURL)
   .catch((err) => console.error('❌ MongoDB connection error:', err));`
     : ""
 }
+${
+  database === "PostgreSQL"
+    ? `// Prisma client
+const connectionString = process.env.DATABASE_URL;
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });`
+    : ""
+}
 
 const PORT = process.env.PORT || 5000;
 app.get('/', (req, res) => res.send('Hello from TypeScript Express!'));
@@ -154,6 +168,7 @@ app.listen(PORT, () => console.log('Server running on http://localhost:' + PORT)
 const cors = require('cors');
 require('dotenv').config();
 ${database === "MongoDB" ? "const mongoose = require('mongoose');" : ""}
+${database === "PostgreSQL" ? "const { PrismaClient } = require('@prisma/client');\nconst { PrismaPg } = require('@prisma/adapter-pg');" : ""}
 
 const app = express();
 app.use(cors());
@@ -168,6 +183,14 @@ mongoose.connect(mongoURL)
   .catch((err) => console.error('❌ MongoDB connection error:', err));`
     : ""
 }
+${
+  database === "PostgreSQL"
+    ? `// Prisma client
+const connectionString = process.env.DATABASE_URL;
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });`
+    : ""
+}
 
 const PORT = process.env.PORT || 5000;
 app.get('/', (req, res) => res.send('Hello from Express!'));
@@ -176,6 +199,42 @@ app.listen(PORT, () => console.log('Server running on http://localhost:' + PORT)
 
     fs.writeFileSync(path.join(serverDir, serverFile), serverCode);
 
+    // Create Prisma schema if PostgreSQL
+    if (database === "PostgreSQL") {
+      const prismaDir = path.join(serverDir, "prisma");
+      fs.ensureDirSync(prismaDir);
+      const schemaContent = `// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+}
+`;
+      fs.writeFileSync(path.join(prismaDir, "schema.prisma"), schemaContent);
+
+      const configContent = `import { defineConfig } from 'prisma/config'
+import { env } from 'prisma/config'
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
+})
+`;
+      fs.writeFileSync(path.join(prismaDir, "prisma.config.ts"), configContent);
+    }
+
     const serverPackage = JSON.parse(
       fs.readFileSync(path.join(serverDir, "package.json")),
     );
@@ -183,6 +242,10 @@ app.listen(PORT, () => console.log('Server running on http://localhost:' + PORT)
       backendLang === "TypeScript"
         ? { dev: "ts-node-dev index.ts" }
         : { dev: "node index.js" };
+    if (database === "PostgreSQL") {
+      serverPackage.scripts["prisma:generate"] = "prisma generate";
+      serverPackage.scripts["prisma:db:push"] = "prisma db push";
+    }
     fs.writeFileSync(
       path.join(serverDir, "package.json"),
       JSON.stringify(serverPackage, null, 2),
@@ -249,11 +312,28 @@ MONGODB_URL=mongodb://127.0.0.1:27017/myappDB
 # Server Port
 PORT=5000
 `;
+    } else if (database === "PostgreSQL") {
+      envContent = `# PostgreSQL Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/myappdb?schema=public"
+
+# Server Port
+PORT=5000
+`;
     }
 
     fs.writeFileSync(path.join(serverDir, ".env"), envContent);
     console.log(chalk.green("📄 .env file created in server folder"));
     // <<< END .env CREATION
+
+    // Generate Prisma client if PostgreSQL
+    if (database === "PostgreSQL") {
+      try {
+        await execa("npx", ["prisma", "generate"], { cwd: serverDir });
+        console.log(chalk.green("📄 Prisma client generated"));
+      } catch (err) {
+        console.warn("⚠️ Could not generate Prisma client:", err.message);
+      }
+    }
 
     backendSpinner.succeed("✅ Express backend setup complete!");
   } catch (err) {
