@@ -1,6 +1,6 @@
 # **Create Fullstack App CLI**
 
-CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular** on the frontend and **Express** on the backend, with support for **JavaScript** and **TypeScript**. It also supports **MongoDB** or **PostgreSQL integration** using environment variables, including **automatic `.env` creation** with default configurations.
+CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular** on the frontend and **Express** on the backend, with support for **JavaScript** and **TypeScript**. It also supports **MongoDB** or **PostgreSQL integration** using environment variables, including **automatic `.env` creation** with default configurations. Optionally generate **Docker Compose** setup for containerized development.
 
 ---
 
@@ -12,11 +12,12 @@ CLI to scaffold **fullstack applications** with **React, Next.js, Vue, Angular**
 4. [Frontend Options](#frontend-options)
 5. [Backend Options](#backend-options)
 6. [Database Setup](#database-setup)
-7. [Linting and Formatting](#linting-and-formatting)
-8. [Project Structure](#project-structure)
-9. [Running the Project](#running-the-project)
-10. [Contributing](#contributing)
-11. [License](#license)
+7. [Docker Setup](#docker-setup)
+8. [Linting and Formatting](#linting-and-formatting)
+9. [Project Structure](#project-structure)
+10. [Running the Project](#running-the-project)
+11. [Contributing](#contributing)
+12. [License](#license)
 
 ---
 
@@ -60,6 +61,7 @@ After running the CLI:
 5. Optionally, choose **MongoDB** or **PostgreSQL** as your database.
 6. Optionally, choose to install **Tailwind CSS** for the frontend (not available for Angular).
 7. Optionally, choose to install **ESLint and Prettier** for code linting and formatting.
+8. Optionally, choose to add **Docker support** with Docker Compose setup.
 
 The CLI will automatically:
 
@@ -78,6 +80,7 @@ The CLI will automatically:
 - Optional **MongoDB** or **PostgreSQL** setup with **automatic `.env` creation**.
 - Optional **Tailwind CSS** setup for frontend frameworks (except Angular).
 - Optional **ESLint and Prettier** setup with automatic configuration files in root, client, and server folders.
+- Optional **Docker Compose** setup for containerized development and deployment.
 - Automatically installs **concurrently** to run frontend and backend together.
 - Default project name, author info, and GitHub link included.
 
@@ -203,6 +206,82 @@ This will create the database tables based on your schema.
 
 ---
 
+## **Docker Setup**
+
+If you chose to enable **Docker support** during setup, the CLI will generate:
+
+### Generated Docker Files:
+
+1. **`Dockerfile`** in both `server` and `client` directories
+   - Backend: Optimized Node.js Alpine image for development
+   - Frontend: Multi-stage builds for production optimization
+     - Next.js: Native Node.js deployment
+     - React/Vue/Angular: Nginx reverse proxy for SPA routing
+
+2. **`docker-compose.yml`** at project root
+   - Orchestrates frontend, backend, and optional database services
+   - Automatic volume mounting for live code changes
+   - Environment variables pre-configured
+   - Database networking configured
+
+3. **`DOCKER.md`** - Quick reference guide
+   - Commands for running containers
+   - Service access points
+   - Database connection details
+   - Troubleshooting tips
+
+4. **`.dockerignore`** files
+   - Excludes `node_modules`, `.git`, etc. for faster builds
+
+### Quick Start with Docker:
+
+```bash
+cd my-fullstack-app
+docker-compose up
+```
+
+**Services will be available at:**
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:5000`
+- Database (MongoDB): `localhost:27017`
+- Database (PostgreSQL): `localhost:5432`
+
+### Common Docker Compose Commands:
+
+```bash
+# Start services in foreground
+docker-compose up
+
+# Start services in background
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f backend
+
+# Rebuild images
+docker-compose build
+
+# Remove containers and volumes
+docker-compose down -v
+```
+
+### Features:
+
+- **Live Code Reloading**: Changes reflected immediately thanks to volume mounts
+- **Database Persistence**: Data persists in Docker volumes
+- **Service Networking**: All services communicate via service names
+- **Environment Configuration**: Pre-configured environment variables
+- **Production Ready**: Multi-stage Docker builds for optimal image sizes
+
+---
+
 ## **Linting and Formatting**
 
 If you chose to install **ESLint and Prettier** during setup:
@@ -230,10 +309,15 @@ After scaffolding, your project will look like:
 ```
 my-fullstack-app/
 ├─ client/              # Frontend
+│  ├─ Dockerfile        # Frontend container (if Docker enabled)
+│  ├─ .dockerignore     # Docker ignore file (if Docker enabled)
+│  ├─ nginx.conf        # Nginx config for SPA routing (if Docker enabled, non-Next.js)
 │  ├─ .eslintrc.js      # ESLint config (if chosen)
 │  └─ .prettierrc       # Prettier config (if chosen)
 ├─ server/              # Backend
 │  ├─ index.js or index.ts
+│  ├─ Dockerfile        # Backend container (if Docker enabled)
+│  ├─ .dockerignore     # Docker ignore file (if Docker enabled)
 │  ├─ .env              # Database config (auto-generated if selected)
 │  ├─ prisma/           # Prisma folder (if PostgreSQL selected)
 │  │  ├─ schema.prisma
@@ -242,6 +326,8 @@ my-fullstack-app/
 │  └─ .prettierrc       # Prettier config (if chosen)
 ├─ .eslintrc.js         # Root ESLint config (if chosen)
 ├─ .prettierrc          # Root Prettier config (if chosen)
+├─ docker-compose.yml   # Docker Compose orchestration (if Docker enabled)
+├─ DOCKER.md            # Docker setup guide (if Docker enabled)
 ├─ package.json         # Root scripts (dev using concurrently)
 └─ README.md
 ```

@@ -22,6 +22,350 @@ try {
   console.warn("⚠️ Could not read package.json version:", err.message);
 }
 
+// 🐳 DOCKER HELPER FUNCTIONS
+function createDockerfiles(rootDir, frontend, backendLang) {
+  const serverDir = path.join(rootDir, "server");
+  const clientDir = path.join(rootDir, "client");
+
+  // Backend Dockerfile
+  const backendDockerfile = `FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["npm", "run", "dev"]
+`;
+
+  fs.writeFileSync(path.join(serverDir, "Dockerfile"), backendDockerfile);
+  fs.writeFileSync(
+    path.join(serverDir, ".dockerignore"),
+    "node_modules\nnpm-debug.log\n.env\n.git\n",
+  );
+
+  // Frontend Dockerfile (multi-stage)
+  let frontendDockerfile = "";
+  if (frontend === "Next.js") {
+    frontendDockerfile = `FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 3000
+CMD ["npm", "start"]
+`;
+  } else {
+    // React, Vue, Angular with Vite/CRA
+    frontendDockerfile = `FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+`;
+  }
+
+  fs.writeFileSync(path.join(clientDir, "Dockerfile"), frontendDockerfile);
+  fs.writeFileSync(
+    path.join(clientDir, ".dockerignore"),
+    "node_modules\nnpm-debug.log\n.git\nbuild\ndist\n",
+  );
+
+  // Create nginx config for non-Next.js frontends
+  if (frontend !== "Next.js") {
+    const nginxConf = `user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include /etc/nginx/mime.types;
+  default_type application/octet-stream;
+
+  log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                  '$status $body_bytes_sent "$http_referer" '
+                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+  access_log /var/log/nginx/access.log main;
+
+  sendfile on;
+  tcp_nopush on;
+  tcp_nodelay on;
+  keepalive_timeout 65;
+  types_hash_max_size 2048;
+  gzip on;
+
+  server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+      try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+      expires 1y;
+      add_header Cache-Control "public, immutable";
+    }
+  }
+}
+`;
+    fs.writeFileSync(path.join(clientDir, "nginx.conf"), nginxConf);
+  }
+}
+
+function createDockerCompose(rootDir, database) {
+  const compose = {
+    version: "3.8",
+    services: {
+      backend: {
+        build: "./server",
+        container_name: "fullstack-backend",
+        ports: ["5000:5000"],
+        environment: {
+          NODE_ENV: "development",
+          PORT: 5000,
+          ...(database === "MongoDB" && {
+            MONGODB_URL: "mongodb://mongo:27017/myappDB",
+          }),
+          ...(database === "PostgreSQL" && {
+            DATABASE_URL:
+              "postgresql://postgres:password@postgres:5432/myappdb?schema=public",
+          }),
+        },
+        volumes: ["./server:/app", "/app/node_modules"],
+        ...(database === "MongoDB" && { depends_on: ["mongo"] }),
+        ...(database === "PostgreSQL" && { depends_on: ["postgres"] }),
+      },
+      frontend: {
+        build: "./client",
+        container_name: "fullstack-frontend",
+        ports: ["3000:3000"],
+        volumes: ["./client:/app", "/app/node_modules"],
+        depends_on: ["backend"],
+        environment: {
+          REACT_APP_API_URL: "http://localhost:5000",
+          VITE_API_URL: "http://localhost:5000",
+          NEXT_PUBLIC_API_URL: "http://localhost:5000",
+        },
+      },
+      ...(database === "MongoDB" && {
+        mongo: {
+          image: "mongo:7",
+          container_name: "fullstack-mongo",
+          ports: ["27017:27017"],
+          volumes: ["mongo_data:/data/db"],
+          environment: {
+            MONGO_INITDB_DATABASE: "myappDB",
+          },
+        },
+      }),
+      ...(database === "PostgreSQL" && {
+        postgres: {
+          image: "postgres:16-alpine",
+          container_name: "fullstack-postgres",
+          ports: ["5432:5432"],
+          volumes: ["postgres_data:/var/lib/postgresql/data"],
+          environment: {
+            POSTGRES_USER: "postgres",
+            POSTGRES_PASSWORD: "password",
+            POSTGRES_DB: "myappdb",
+          },
+        },
+      }),
+    },
+    volumes: {
+      ...(database === "MongoDB" && { mongo_data: {} }),
+      ...(database === "PostgreSQL" && { postgres_data: {} }),
+    },
+  };
+
+  fs.writeFileSync(
+    path.join(rootDir, "docker-compose.yml"),
+    JSON.stringify(compose, null, 2)
+      .replace(/"/g, "'")
+      .replace(/'/g, ``)
+      .split("\n")
+      .map((line) => line.replace(/^  /, ""))
+      .join("\n"),
+  );
+
+  // Create better formatted docker-compose manually
+  const dockerComposeContent = `version: '3.8'
+
+services:
+  backend:
+    build: ./server
+    container_name: fullstack-backend
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      ${database === "MongoDB" ? "MONGODB_URL: mongodb://mongo:27017/myappDB" : ""}
+      ${database === "PostgreSQL" ? "DATABASE_URL: postgresql://postgres:password@postgres:5432/myappdb?schema=public" : ""}
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    ${database === "MongoDB" ? "depends_on:\n      - mongo" : ""}
+    ${database === "PostgreSQL" ? "depends_on:\n      - postgres" : ""}
+
+  frontend:
+    build: ./client
+    container_name: fullstack-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://localhost:5000
+      VITE_API_URL: http://localhost:5000
+      NEXT_PUBLIC_API_URL: http://localhost:5000
+
+  ${
+    database === "MongoDB"
+      ? `mongo:
+    image: mongo:7
+    container_name: fullstack-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: myappDB
+`
+      : ""
+  }
+
+  ${
+    database === "PostgreSQL"
+      ? `postgres:
+    image: postgres:16-alpine
+    container_name: fullstack-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: myappdb
+`
+      : ""
+  }
+
+volumes:
+  ${database === "MongoDB" ? `mongo_data:\n` : ""}
+  ${database === "PostgreSQL" ? `postgres_data:\n` : ""}
+`;
+
+  fs.writeFileSync(
+    path.join(rootDir, "docker-compose.yml"),
+    dockerComposeContent,
+  );
+}
+
+function createDockerReadme(rootDir) {
+  const dockerReadme = `# 🐳 Docker Setup Guide
+
+## Quick Start
+
+### Prerequisites
+- Docker
+- Docker Compose
+
+### Running with Docker Compose
+
+\`\`\`bash
+# Start all services
+docker-compose up
+
+# Start in background
+docker-compose up -d
+
+# Stop services
+docker-compose down
+\`\`\`
+
+### Access Services
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:5000
+- **Database**: See below for port based on your DB choice
+
+## Database Access (if enabled)
+
+### MongoDB
+\`\`\`
+Host: localhost:27017
+Database: myappDB
+\`\`\`
+
+### PostgreSQL
+\`\`\`
+Host: localhost:5432
+User: postgres
+Password: password
+Database: myappdb
+\`\`\`
+
+## Common Docker Commands
+
+\`\`\`bash
+# View logs for all services
+docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f backend
+
+# Run command in a container
+docker-compose exec backend npm install new-package
+
+# Rebuild images after dependencies change
+docker-compose build
+
+# Remove containers and volumes
+docker-compose down -v
+\`\`\`
+
+## Development Notes
+
+- Changes to code are automatically reflected due to volume mounts
+- `.dockerignore` files exclude unnecessary files from Docker builds
+- Database data persists in Docker volumes
+- Frontend API URL environment variables are configured to point to backend at http://localhost:5000
+`;
+
+  fs.writeFileSync(path.join(rootDir, "DOCKER.md"), dockerReadme);
+}
+
 async function main() {
   console.log(
     chalk.cyan(`
@@ -86,7 +430,15 @@ async function main() {
       default: false,
     },
   ]);
-
+  // 1.7️⃣ Prompt for Docker setup
+  const { enableDocker } = await inquirer.prompt([
+    {
+      type: "confirm",
+      name: "enableDocker",
+      message: "Do you want to add Docker support (docker-compose setup)?",
+      default: false,
+    },
+  ]);
   const rootDir = path.resolve(projectName);
   const serverDir = path.join(rootDir, "server");
   const clientDir = path.join(rootDir, "client");
@@ -620,11 +972,26 @@ PORT=5000
     process.exit(1);
   }
 
+  // 5️⃣ Setup Docker if enabled
+  if (enableDocker) {
+    const dockerSpinner = ora("🐳 Setting up Docker files...").start();
+    try {
+      createDockerfiles(rootDir, frontend, backendLang);
+      createDockerCompose(rootDir, database);
+      createDockerReadme(rootDir);
+      dockerSpinner.succeed("✅ Docker setup complete!");
+    } catch (err) {
+      dockerSpinner.fail("❌ Failed to setup Docker");
+      console.error(err);
+    }
+  }
+
   console.log(chalk.green("✅ Fullstack App created successfully!"));
   console.log(
     chalk.blue(`
 Next steps:
   cd ${projectName}
+  ${enableDocker ? "docker-compose up\nor" : ""}
   npm run dev
 `),
   );
